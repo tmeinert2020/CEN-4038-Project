@@ -1,0 +1,29 @@
+---
+name: Defend against MITM attack
+hosts: all
+become: yes
+tasks:
+name: Install arpwatch
+  apt:
+    name: arpwatch
+    state: present
+    update_cache: yes
+
+    
+name: Configure arpwatch to monitor ARP spoofing
+    copy:
+      dest: /etc/arpwatch.conf
+      content: |
+        INTERFACES="eth0"
+        REPORTFILE="/var/log/arpwatch.log"
+
+    
+name: Start arpwatch service
+    service:
+      name: arpwatch
+      state: started
+      enabled: yes
+
+    
+name: Notify admin of suspicious ARP changes
+    shell: grep -i "new station" /var/log/arpwatch.log | mail -s "Suspicious ARP Activity Detected" admin@example.com
