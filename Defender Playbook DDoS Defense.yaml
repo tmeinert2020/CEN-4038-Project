@@ -1,0 +1,27 @@
+# Defender Playbook (DDoS Defense - Rate Limiting with firewalld)
+- hosts: node2
+  become: true
+  gather_facts: no
+  vars:
+   victim_ip: 54.197.131.8
+  tasks:
+    - name: Install firewalld
+      yum:  # Or use yum/dnf for other distributions
+        name: firewalld
+        state: present
+
+    - name: Enable and start firewalld service
+      service:
+    name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Add rate limiting rule with firewalld (direct commands)
+      firewalld:
+        zone: public  # Or the zone where your web server is
+        permanent: yes
+        state: enabled
+        rich_rule: 'rule family="ipv4" source address="{{victim_ip}}" port protocol="tcp" port="80" limit value="10/s" drop'
+
+    - name: Reload firewalld
+      shell: firewall-cmd --reload
