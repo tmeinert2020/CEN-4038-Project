@@ -1,0 +1,47 @@
+---
+- name: LAMP for website
+  user: ansibledevops
+  hosts: node1
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: install and start Docker
+      yum:
+        name: docker
+        state: latest
+    - name: enable and start Docker service
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+    - name: run MariaDB container
+      docker_container:
+        name: mariadb
+        image: mariadb:latest
+        state: started
+        restart_policy: always
+        env:
+          MYSQL_ROOT_PASSWORD: my-secret-pw
+        ports:
+          - "3306:3306"
+    - name: install related packages
+      yum:
+        name:
+          - httpd
+          - php
+          - php-mysqlnd
+        state: latest
+    - name: enable and start HTTP service
+      service:
+        name: httpd
+        enabled: true
+        state: started
+    - name: Copy index.php from local machine
+      copy:
+        src: index.php  # Path to your local index.php file
+        dest: /var/www/html/index.php
+    - name: view webpage
+      uri:
+        url: http://54.144.178.62/index.php
+        status_code: 200
+      check_mode: no
